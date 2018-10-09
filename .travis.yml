@@ -1,0 +1,22 @@
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t dreamwst/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run dreamwst/react-test npm test -- --coverage
+
+after_success:
+  - docker build -t dreamwst/multi-client ./client
+  - docker build -t dreamwst/multi-nginx ./nginx
+  - docker build -t dreamwst/multi-server ./server
+  - docker build -t dreamwst/multi-worker ./worker
+  # Login into the docker CLI
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  # take those image and push to the docker hub
+  - docker push dreamwst/multi-client
+  - docker push dreamwst/multi-nginx
+  - docker push dreamwst/multi-server
+  - docker push dreamwst/multi-worker
